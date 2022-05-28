@@ -23,7 +23,7 @@ function App() {
   });
 
   return (
-    <div className="App">
+    <div className="aluno-container">
       <h3>Cadastro de Alunos</h3>
 
       <header className="">
@@ -38,7 +38,7 @@ function App() {
             <th>Nome</th>
             <th>Email</th>
             <th>Idade</th>
-            <th>Opoeração</th>
+            <th>Operação</th>
           </tr>
         </thead>
         <tbody> 
