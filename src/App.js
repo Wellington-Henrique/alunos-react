@@ -1,4 +1,3 @@
-//*
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
@@ -6,7 +5,7 @@ import LogoCadastro from './assets/cadastro-ico.jpg';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
-const baseUrl = "https://localhost:44311/api/";
+const baseUrl = "https://localhost:44311/api/alunos";
 
 const initialState = {
   id: '',
@@ -19,9 +18,19 @@ function App() {
   const [data, setData] = useState([]);
   const [alunoSelecionado, setAlunoSelecionado] = useState(initialState);
   const [modalIncluir, setModalIncluir] = useState(false);
+  const [modalEditar, setModalEditar] = useState(false);
+
+  const selecionarAluno = (aluno, opcao) => {
+    setAlunoSelecionado(aluno);
+    (opcao === "Editar") && abrirFecharModalEditar();
+  }
 
   const abrirFecharModalIncluir = () => {
     setModalIncluir(!modalIncluir);
+  }
+
+  const abrirFecharModalEditar = () => {
+    setModalEditar(!modalEditar);
   }
 
   const handleChange = e => {
@@ -33,7 +42,7 @@ function App() {
   }
 
   const pedidoGet = async() => {
-    await axios.get(`${baseUrl}alunos`)
+    await axios.get(baseUrl)
     .then(response => setData(response.data))
     .catch(error => {
       console.log(error)
@@ -44,7 +53,7 @@ function App() {
     delete alunoSelecionado.id;
     alunoSelecionado.idade = parseInt(alunoSelecionado.idade);
 
-    await axios.post(`${baseUrl}alunos`, alunoSelecionado)
+    await axios.post(baseUrl, alunoSelecionado)
     .then(response => {
       setData(data.concat(response.data));
       abrirFecharModalIncluir();
@@ -54,9 +63,31 @@ function App() {
     })
   }
 
+  const pedidoPut = async() => {
+    alunoSelecionado.idade = parseInt(alunoSelecionado.idade);
+    await axios.put(`${baseUrl}/${alunoSelecionado.id}`, alunoSelecionado)
+    .then(response => {
+      var resposta = response.data;
+      var dadosAuxiliar = data;
+
+      dadosAuxiliar.map(aluno => {
+        if (aluno.id === alunoSelecionado.id){
+          aluno.nome = resposta.nome;
+          aluno.email = resposta.email;
+          aluno.idade = resposta.idade;
+        }
+      });
+      abrirFecharModalEditar();
+      pedidoGet();
+    })
+    .catch(error => {
+      console.log(error)
+    })
+  }
+
   useEffect(()=> {
     pedidoGet();
-  });
+  }, []);
 
   return (
     <div className="aluno-container">
@@ -85,7 +116,7 @@ function App() {
               <td>{aluno.email}</td>
               <td>{aluno.idade}</td>
               <td>
-                <button className="btn btn-primary me-2" onClick={() => console.log("Clicou...")}>Editar</button>
+                <button className="btn btn-primary me-2" onClick={() => selecionarAluno(aluno, "Editar")}>Editar</button>
                 <button className="btn btn-danger" onClick={() => console.log("Clicou...")}>Excluir</button>
               </td>
             </tr>
@@ -111,6 +142,33 @@ function App() {
         <ModalFooter>
           <button className="btn btn-primary" onClick={() => pedidoPost()}>Incluir</button>
           <button className="btn btn-danger" onClick={() => abrirFecharModalIncluir()}>Cancelar</button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={modalEditar}>
+        <ModalHeader>Editar Aluno</ModalHeader>
+        <ModalBody>
+          <div className="form-group">
+            <label>ID:</label>
+            <input type="text" className="form-control" readOnly value={alunoSelecionado && alunoSelecionado.id}/>
+            <br/>
+            <label>Nome:</label>
+            <br/>
+            <input type="text" className="form-control" name="nome" onChange={handleChange}
+                  value={alunoSelecionado && alunoSelecionado.nome}/>
+            <label>Email:</label>
+            <br/>
+            <input type="text" className="form-control" name="email" onChange={handleChange}
+                  value={alunoSelecionado && alunoSelecionado.email}/>
+            <label>Idade:</label>
+            <br/>
+            <input type="text" className="form-control" name="idade" onChange={handleChange}
+                  value={alunoSelecionado && alunoSelecionado.idade}/>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <button className="btn btn-primary" onClick={() => pedidoPut()}>Editar</button>
+          <button className="btn btn-danger" onClick={() => abrirFecharModalEditar()}>Cancelar</button>
         </ModalFooter>
       </Modal>
     </div>
