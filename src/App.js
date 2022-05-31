@@ -19,10 +19,12 @@ function App() {
   const [alunoSelecionado, setAlunoSelecionado] = useState(initialState);
   const [modalIncluir, setModalIncluir] = useState(false);
   const [modalEditar, setModalEditar] = useState(false);
+  const [modalDeletar, setModalDeletar] = useState(false);
 
   const selecionarAluno = (aluno, opcao) => {
     setAlunoSelecionado(aluno);
-    (opcao === "Editar") && abrirFecharModalEditar();
+    (opcao === "Editar") ? 
+    abrirFecharModalEditar() : abrirFecharModalDeletar();
   }
 
   const abrirFecharModalIncluir = () => {
@@ -31,6 +33,10 @@ function App() {
 
   const abrirFecharModalEditar = () => {
     setModalEditar(!modalEditar);
+  }
+
+  const abrirFecharModalDeletar = () => {
+    setModalDeletar(!modalDeletar);
   }
 
   const handleChange = e => {
@@ -85,6 +91,18 @@ function App() {
     })
   }
 
+  const pedidoDelete = async() => {
+    await axios.delete(`${baseUrl}/${alunoSelecionado.id}`)
+    .then(response => {
+      setData(data.filter(aluno => aluno.id !== response.data));
+      abrirFecharModalDeletar();
+      pedidoGet();
+    })
+    .catch(error => {
+      console.log(error)
+    })
+  }
+
   useEffect(()=> {
     pedidoGet();
   }, []);
@@ -117,7 +135,7 @@ function App() {
               <td>{aluno.idade}</td>
               <td>
                 <button className="btn btn-primary me-2" onClick={() => selecionarAluno(aluno, "Editar")}>Editar</button>
-                <button className="btn btn-danger" onClick={() => console.log("Clicou...")}>Excluir</button>
+                <button className="btn btn-danger" onClick={() => selecionarAluno(aluno, "Excluir")}>Excluir</button>
               </td>
             </tr>
           ))}
@@ -169,6 +187,16 @@ function App() {
         <ModalFooter>
           <button className="btn btn-primary" onClick={() => pedidoPut()}>Editar</button>
           <button className="btn btn-danger" onClick={() => abrirFecharModalEditar()}>Cancelar</button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={modalDeletar}>
+        <ModalBody>
+            Confirma a exclusão deste(a) aluno(a)?
+        </ModalBody>
+        <ModalFooter>
+          <button className="btn btn-primary" onClick={() => pedidoDelete()}>Sim</button>
+          <button className="btn btn-secondary" onClick={() => abrirFecharModalDeletar()}>Não</button>
         </ModalFooter>
       </Modal>
     </div>
